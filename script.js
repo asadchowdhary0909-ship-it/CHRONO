@@ -1,130 +1,147 @@
+javascript
+/* =========================================================
+   KIDS SCIENCE
+   COMPLETE FIREBASE-CONNECTED JAVASCRIPT
+   ========================================================= */
+
 "use strict";
 
 /* =========================================================
-   KIDS SCIENCE
-   COMPLETE SCIENCE WEBSITE JAVASCRIPT
-========================================================= */
+   FIREBASE
+   ========================================================= */
+
+import { initializeApp } from
+    "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+
+import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    onValue,
+    onDisconnect,
+    serverTimestamp
+} from
+    "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
+
+
+/* =========================================================
+   FIREBASE CONFIG
+   =========================================================
+   IMPORTANT:
+   Replace the YOUR_... values with your Firebase Web App
+   configuration.
+
+   Your databaseURL is already inserted.
+   ========================================================= */
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "chrono-fa677.firebaseapp.com",
+    databaseURL: "https://chrono-fa677-default-rtdb.firebaseio.com/",
+    projectId: "chrono-fa677",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+
+/* =========================================================
+   FIREBASE INITIALIZATION
+   ========================================================= */
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
 
 
 /* =========================================================
    STORAGE
-========================================================= */
+   ========================================================= */
 
 const ACCOUNTS_KEY = "kidsScienceAccounts";
-const CURRENT_KEY = "kidsScienceCurrentUID";
-const CHAT_KEY = "kidsScienceChat";
-
-
-/* =========================================================
-   GLOBAL
-========================================================= */
+const CURRENT_ACCOUNT_KEY = "kidsScienceCurrentUID";
+const WATCH_VIDEO_KEY = "kidsScienceWatchVideo";
+const FLAPPY_BEST_KEY = "kidsScienceFlappyBest";
 
 let accounts = [];
 let currentAccount = null;
 
-let flappyRunning = false;
-let flappyAnimation = null;
-
-let bird = null;
-let pipes = [];
-
-let flappyScore = 0;
-let flappyBest = 0;
-
-let quizIndex = 0;
-let quizScore = 0;
-
 
 /* =========================================================
-   BASIC STORAGE
-========================================================= */
+   LOAD LOCAL ACCOUNTS
+   ========================================================= */
 
 function loadAccounts() {
-
     try {
-
         accounts = JSON.parse(
-            localStorage.getItem(ACCOUNTS_KEY) || "[]"
-        );
-
-        if (!Array.isArray(accounts)) {
-            accounts = [];
-        }
-
+            localStorage.getItem(ACCOUNTS_KEY)
+        ) || [];
     } catch (error) {
-
-        console.error(error);
-
+        console.error("Could not load accounts:", error);
         accounts = [];
     }
-
 }
 
 
 function saveAccounts() {
-
     localStorage.setItem(
         ACCOUNTS_KEY,
         JSON.stringify(accounts)
     );
-
 }
 
 
 function getCurrentAccount() {
+    loadAccounts();
 
-    const uid =
-        localStorage.getItem(CURRENT_KEY);
+    const uid = localStorage.getItem(
+        CURRENT_ACCOUNT_KEY
+    );
 
     if (!uid) {
+        currentAccount = null;
         return null;
     }
 
-    return accounts.find(
-        account => account.uid === uid
-    ) || null;
+    currentAccount =
+        accounts.find(account => account.uid === uid) || null;
 
+    return currentAccount;
 }
 
 
 function saveCurrentAccount() {
-
-    if (!currentAccount) {
-        return;
-    }
+    if (!currentAccount) return;
 
     const index = accounts.findIndex(
         account => account.uid === currentAccount.uid
     );
 
-    if (index !== -1) {
-
+    if (index === -1) {
+        accounts.push(currentAccount);
+    } else {
         accounts[index] = currentAccount;
-
-        saveAccounts();
-
     }
 
+    saveAccounts();
 }
 
 
 /* =========================================================
    UID
-========================================================= */
+   ========================================================= */
 
 function generateUID() {
 
-    const chars =
+    const characters =
         "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     let uid = "KID-";
 
     for (let i = 0; i < 6; i++) {
-
-        uid += chars[
-            Math.floor(Math.random() * chars.length)
+        uid += characters[
+            Math.floor(Math.random() * characters.length)
         ];
-
     }
 
     return uid;
@@ -132,188 +149,177 @@ function generateUID() {
 
 
 /* =========================================================
+   RANDOM AVATAR
+   ========================================================= */
+
+function randomEmoji() {
+
+    const emojis = [
+        "🙂",
+        "😀",
+        "😎",
+        "🤓",
+        "🐶",
+        "🐱",
+        "🦊",
+        "🐼",
+        "🐯",
+        "🐸",
+        "🐵",
+        "🦁",
+        "🐨",
+        "🐰"
+    ];
+
+    return emojis[
+        Math.floor(Math.random() * emojis.length)
+    ];
+}
+
+
+/* =========================================================
    LOGIN
-========================================================= */
+   ========================================================= */
 
 function enterScienceWorld() {
 
     const input =
         document.getElementById("nameInput");
 
-    if (!input) {
-        return;
-    }
+    if (!input) return;
 
-    const name =
-        input.value.trim();
+    const name = input.value.trim();
 
     if (!name) {
-
         alert("Please enter your nickname.");
-
-        input.focus();
-
         return;
-
     }
 
+    if (name.length > 16) {
+        alert("Nickname must be 16 characters or less.");
+        return;
+    }
 
     loadAccounts();
 
-
-    const existing =
+    const existingAccount =
         accounts.find(
             account =>
                 account.name.toLowerCase() ===
                 name.toLowerCase()
         );
 
+    if (existingAccount) {
 
-    /* EXISTING ACCOUNT */
-
-    if (existing) {
-
-        currentAccount = existing;
+        currentAccount = existingAccount;
 
         localStorage.setItem(
-            CURRENT_KEY,
-            existing.uid
+            CURRENT_ACCOUNT_KEY,
+            existingAccount.uid
+        );
+
+    } else {
+
+        currentAccount = {
+
+            uid: generateUID(),
+
+            name: name,
+
+            emoji: randomEmoji(),
+
+            balance: 500,
+
+            pass: "FREE",
+
+            passExpires: null,
+
+            transactions: [
+                {
+                    text: "🎁 Welcome bonus",
+                    amount: 500,
+                    date: new Date().toLocaleString()
+                }
+            ],
+
+            lastBonusDate: null,
+
+            lastDailyPassReward: null
+        };
+
+        accounts.push(currentAccount);
+
+        localStorage.setItem(
+            CURRENT_ACCOUNT_KEY,
+            currentAccount.uid
         );
 
         saveAccounts();
-
-        window.location.href = "home.html";
-
-        return;
-
     }
 
+    saveCurrentAccount();
 
-    /* NEW ACCOUNT */
-
-    const newAccount = {
-
-        uid: generateUID(),
-
-        name: name,
-
-        emoji: randomEmoji(),
-
-        balance: 500,
-
-        pass: "FREE",
-
-        passExpires: null,
-
-        transactions: [
-
-            {
-                text: "🎁 Welcome Bonus",
-                amount: 500,
-                date: new Date().toLocaleString()
-            }
-
-        ],
-
-        lastBonusDate: null,
-
-        lastDailyPassReward: null
-
-    };
-
-
-    accounts.push(newAccount);
-
-    saveAccounts();
-
-
-    currentAccount = newAccount;
-
-    localStorage.setItem(
-        CURRENT_KEY,
-        newAccount.uid
-    );
-
+    registerPlayerOnline();
 
     window.location.href = "home.html";
 }
 
 
-function randomEmoji() {
-
-    const emojis = [
-        "🙂",
-        "😎",
-        "🤓",
-        "🧑‍🔬",
-        "👨‍🚀",
-        "🦊",
-        "🐼",
-        "🐯",
-        "🐸",
-        "🦁"
-    ];
-
-    return emojis[
-        Math.floor(Math.random() * emojis.length)
-    ];
-
-}
-
-
 /* =========================================================
-   ENTER KEY LOGIN
-========================================================= */
+   LOGIN PAGE
+   ========================================================= */
 
 function initializeLoginPage() {
+
+    const button =
+        document.getElementById("enterButton");
 
     const input =
         document.getElementById("nameInput");
 
-    if (!input) {
-        return;
+    if (button) {
+        button.addEventListener(
+            "click",
+            enterScienceWorld
+        );
     }
 
-    input.addEventListener(
-        "keydown",
-        function(event) {
+    if (input) {
 
-            if (event.key === "Enter") {
+        input.addEventListener(
+            "keydown",
+            event => {
 
-                event.preventDefault();
-
-                enterScienceWorld();
+                if (event.key === "Enter") {
+                    enterScienceWorld();
+                }
 
             }
-
-        }
-    );
-
+        );
+    }
 }
 
 
 /* =========================================================
-   LOGIN PROTECTION
-========================================================= */
+   PROTECTED PAGES
+   ========================================================= */
 
 function requireLogin() {
 
-    loadAccounts();
+    const page =
+        document.body.dataset.page;
 
-    currentAccount =
-        getCurrentAccount();
+    if (page === "login") return;
 
+    getCurrentAccount();
 
     if (!currentAccount) {
-
         window.location.href = "index.html";
-
         return false;
-
     }
 
-
     checkPassExpiration();
+    processDailyPassReward();
 
     return true;
 }
@@ -321,177 +327,141 @@ function requireLogin() {
 
 /* =========================================================
    PASS EXPIRATION
-========================================================= */
+   ========================================================= */
 
 function checkPassExpiration() {
 
-    if (!currentAccount) {
-        return;
-    }
+    if (!currentAccount) return;
 
     if (
         currentAccount.pass !== "FREE" &&
         currentAccount.passExpires
     ) {
 
-        const expiration =
-            new Date(currentAccount.passExpires);
-
-        if (Date.now() >= expiration.getTime()) {
-
-            const oldPass =
-                currentAccount.pass;
+        if (
+            Date.now() >=
+            new Date(currentAccount.passExpires).getTime()
+        ) {
 
             currentAccount.pass = "FREE";
-
             currentAccount.passExpires = null;
 
             currentAccount.lastDailyPassReward = null;
 
-            currentAccount.transactions =
-                currentAccount.transactions || [];
-
-            currentAccount.transactions.unshift({
-
-                text:
-                    "⏰ " +
-                    oldPass +
-                    " Pass expired",
-
-                amount: 0,
-
-                date: new Date().toLocaleString()
-
-            });
-
             saveCurrentAccount();
 
-            alert(
-                oldPass +
-                " Pass has expired. You are now on FREE."
-            );
-
+            applyPassTheme();
         }
-
     }
-
 }
 
 
 /* =========================================================
-   PASS DAILY COINS
-========================================================= */
+   DAILY PASS REWARD
+   ========================================================= */
 
 function processDailyPassReward() {
 
-    if (!currentAccount) {
-        return;
-    }
-
-    checkPassExpiration();
+    if (!currentAccount) return;
 
     if (currentAccount.pass === "FREE") {
         return;
     }
 
-
     const today =
         new Date().toISOString().slice(0, 10);
 
-
     if (
-        currentAccount.lastDailyPassReward === today
+        currentAccount.lastDailyPassReward ===
+        today
     ) {
         return;
     }
 
-
-    let amount = 0;
+    let reward = 0;
 
     if (currentAccount.pass === "PRO") {
-        amount = 500;
+        reward = 500;
     }
 
     if (currentAccount.pass === "ELITE") {
-        amount = 750;
+        reward = 750;
     }
 
     if (currentAccount.pass === "PREMIUM") {
-        amount = 400;
+        reward = 400;
     }
 
+    if (reward > 0) {
 
-    if (amount > 0) {
-
-        currentAccount.balance += amount;
+        currentAccount.balance += reward;
 
         currentAccount.lastDailyPassReward =
             today;
 
+        if (!currentAccount.transactions) {
+            currentAccount.transactions = [];
+        }
+
         currentAccount.transactions.unshift({
 
             text:
-                "🎟️ " +
-                currentAccount.pass +
-                " Daily Coins",
+                `🎟️ ${currentAccount.pass} daily reward`,
 
-            amount: amount,
+            amount: reward,
 
             date: new Date().toLocaleString()
-
         });
 
         saveCurrentAccount();
-
     }
-
 }
 
 
 /* =========================================================
    HEADER
-========================================================= */
+   ========================================================= */
 
 function updateHeader() {
 
-    if (!currentAccount) {
-        return;
-    }
+    getCurrentAccount();
 
+    if (!currentAccount) return;
 
-    const avatar =
-        document.getElementById("headerAvatar");
+    const nameElements =
+        document.querySelectorAll("[data-player-name]");
 
-    const name =
-        document.getElementById("headerName");
-
-
-    if (avatar) {
-        avatar.textContent =
-            currentAccount.emoji;
-    }
-
-
-    if (name) {
-        name.textContent =
+    nameElements.forEach(element => {
+        element.textContent =
             currentAccount.name;
-    }
+    });
 
+    const avatarElements =
+        document.querySelectorAll("[data-player-avatar]");
 
+    avatarElements.forEach(element => {
+        element.textContent =
+            currentAccount.emoji;
+    });
+
+    const uidElements =
+        document.querySelectorAll("[data-player-uid]");
+
+    uidElements.forEach(element => {
+        element.textContent =
+            currentAccount.uid;
+    });
+
+    updateBalanceDisplays();
     applyPassTheme();
-
 }
 
 
 /* =========================================================
    PASS THEME
-========================================================= */
+   ========================================================= */
 
 function applyPassTheme() {
-
-    if (!currentAccount) {
-        return;
-    }
 
     document.body.classList.remove(
         "pass-pro",
@@ -499,81 +469,38 @@ function applyPassTheme() {
         "pass-premium"
     );
 
+    if (!currentAccount) return;
 
     if (currentAccount.pass === "PRO") {
-
-        document.body.classList.add(
-            "pass-pro"
-        );
-
+        document.body.classList.add("pass-pro");
     }
-
 
     if (currentAccount.pass === "ELITE") {
-
-        document.body.classList.add(
-            "pass-elite"
-        );
-
+        document.body.classList.add("pass-elite");
     }
-
 
     if (currentAccount.pass === "PREMIUM") {
-
-        document.body.classList.add(
-            "pass-premium"
-        );
-
+        document.body.classList.add("pass-premium");
     }
-
 }
 
 
 /* =========================================================
    ACCOUNT MODAL
-========================================================= */
+   ========================================================= */
 
 function openAccountModal() {
-
-    if (!currentAccount) {
-        return;
-    }
-
 
     const modal =
         document.getElementById("accountModal");
 
+    if (!modal) return;
 
-    const avatar =
-        document.getElementById("modalAvatar");
+    getCurrentAccount();
 
-    const name =
-        document.getElementById("modalName");
+    modal.classList.add("show");
 
-    const uid =
-        document.getElementById("modalUID");
-
-
-    if (avatar) {
-        avatar.textContent =
-            currentAccount.emoji;
-    }
-
-    if (name) {
-        name.textContent =
-            currentAccount.name;
-    }
-
-    if (uid) {
-        uid.textContent =
-            currentAccount.uid;
-    }
-
-
-    if (modal) {
-        modal.classList.add("show");
-    }
-
+    updateHeader();
 }
 
 
@@ -582,407 +509,361 @@ function closeAccountModal() {
     const modal =
         document.getElementById("accountModal");
 
-    if (modal) {
-        modal.classList.remove("show");
-    }
+    if (!modal) return;
 
+    modal.classList.remove("show");
 }
 
 
 /* =========================================================
    LOGOUT
-========================================================= */
+   ========================================================= */
 
 function logoutCurrentAccount() {
 
+    removePlayerOnline();
+
     localStorage.removeItem(
-        CURRENT_KEY
+        CURRENT_ACCOUNT_KEY
     );
 
     currentAccount = null;
 
-    window.location.href =
-        "index.html";
-
+    window.location.href = "index.html";
 }
 
 
 /* =========================================================
    DELETE ACCOUNT
-========================================================= */
+   ========================================================= */
 
 function deleteCurrentAccount() {
 
-    if (!currentAccount) {
-        return;
-    }
+    getCurrentAccount();
 
+    if (!currentAccount) return;
 
-    const answer =
+    const confirmed =
         confirm(
-            "Delete your account permanently?"
+            "Are you sure you want to permanently delete this account?"
         );
 
+    if (!confirmed) return;
 
-    if (!answer) {
-        return;
-    }
-
+    const uid =
+        currentAccount.uid;
 
     accounts =
         accounts.filter(
-            account =>
-                account.uid !== currentAccount.uid
+            account => account.uid !== uid
         );
-
 
     saveAccounts();
 
-
     localStorage.removeItem(
-        CURRENT_KEY
+        CURRENT_ACCOUNT_KEY
     );
 
+    removePlayerOnline(uid);
 
     currentAccount = null;
 
-
-    window.location.href =
-        "index.html";
-
+    window.location.href = "index.html";
 }
 
 
 /* =========================================================
    BALANCE
-========================================================= */
+   ========================================================= */
 
 function updateBalanceDisplays() {
 
-    if (!currentAccount) {
-        return;
-    }
+    if (!currentAccount) return;
 
+    const elements =
+        document.querySelectorAll(
+            "[data-balance]"
+        );
 
-    const homeBalance =
-        document.getElementById("homeBalance");
+    elements.forEach(element => {
 
-    const walletBalance =
-        document.getElementById("walletBalance");
+        element.textContent =
+            currentAccount.balance;
 
-
-    if (homeBalance) {
-
-        homeBalance.textContent =
-            currentAccount.balance.toLocaleString();
-
-    }
-
-
-    if (walletBalance) {
-
-        walletBalance.textContent =
-            currentAccount.balance.toLocaleString();
-
-    }
-
+    });
 }
 
 
 /* =========================================================
-   CLAIM DAILY BONUS
-========================================================= */
+   ADD COINS
+   ========================================================= */
 
-function claimDailyBonus() {
+function addCoins(amount, reason = "Coins added") {
 
-    if (!currentAccount) {
-        return;
-    }
+    getCurrentAccount();
 
+    if (!currentAccount) return false;
 
-    const today =
-        new Date().toISOString().slice(0, 10);
-
+    amount = Number(amount);
 
     if (
-        currentAccount.lastBonusDate === today
+        !Number.isFinite(amount) ||
+        amount <= 0
     ) {
-
-        alert(
-            "You already claimed today's bonus."
-        );
-
-        updateBonusButton();
-
-        return;
-
+        return false;
     }
-
-
-    const amount = 100;
-
 
     currentAccount.balance += amount;
 
-    currentAccount.lastBonusDate =
-        today;
-
+    if (!currentAccount.transactions) {
+        currentAccount.transactions = [];
+    }
 
     currentAccount.transactions.unshift({
 
-        text: "🎁 Daily Bonus",
+        text: reason,
 
         amount: amount,
 
         date: new Date().toLocaleString()
-
     });
-
-
-    saveCurrentAccount();
-
-
-    updateBalanceDisplays();
-
-    renderTransactions();
-
-    updateBonusButton();
-
-
-    alert(
-        "🎉 You claimed 100 PlayCoins!"
-    );
-
-}
-
-
-/* =========================================================
-   BONUS UI
-========================================================= */
-
-function updateBonusButton() {
-
-    const button =
-        document.getElementById(
-            "claimBonusButton"
-        );
-
-    const status =
-        document.getElementById(
-            "bonusStatus"
-        );
-
-
-    if (!button || !status) {
-        return;
-    }
-
-
-    const today =
-        new Date().toISOString().slice(0, 10);
-
-
-    if (
-        currentAccount &&
-        currentAccount.lastBonusDate === today
-    ) {
-
-        button.disabled = true;
-
-        button.textContent =
-            "BONUS CLAIMED ✓";
-
-        status.textContent =
-            "Come back tomorrow for another bonus.";
-
-    } else {
-
-        button.disabled = false;
-
-        button.textContent =
-            "CLAIM 100 PLAYCOINS";
-
-        status.textContent =
-            "Your daily bonus is ready!";
-
-    }
-
-}
-
-
-/* =========================================================
-   TRANSACTIONS
-========================================================= */
-
-function renderTransactions() {
-
-    const container =
-        document.getElementById(
-            "transactionsList"
-        );
-
-
-    if (!container || !currentAccount) {
-        return;
-    }
-
-
-    const transactions =
-        currentAccount.transactions || [];
-
-
-    container.innerHTML = "";
-
-
-    if (!transactions.length) {
-
-        container.innerHTML =
-            "<p>No transactions yet.</p>";
-
-        return;
-
-    }
-
-
-    transactions
-        .slice(0, 50)
-        .forEach(transaction => {
-
-            const div =
-                document.createElement("div");
-
-
-            div.className =
-                "transaction " +
-                (
-                    transaction.amount >= 0
-                        ? "plus"
-                        : "minus"
-                );
-
-
-            const amount =
-                transaction.amount >= 0
-                    ? "+" + transaction.amount
-                    : transaction.amount;
-
-
-            div.innerHTML = `
-
-                <span>
-                    ${escapeHTML(transaction.text)}
-                </span>
-
-                <strong>
-                    ${amount}
-                </strong>
-
-            `;
-
-
-            container.appendChild(div);
-
-        });
-
-}
-
-
-/* =========================================================
-   SPEND COINS
-========================================================= */
-
-function spendCoins(amount, description) {
-
-    if (!currentAccount) {
-        return false;
-    }
-
-
-    if (
-        currentAccount.balance < amount
-    ) {
-
-        alert(
-            "Not enough PlayCoins."
-        );
-
-        return false;
-
-    }
-
-
-    currentAccount.balance -= amount;
-
-
-    currentAccount.transactions.unshift({
-
-        text: description,
-
-        amount: -amount,
-
-        date: new Date().toLocaleString()
-
-    });
-
 
     saveCurrentAccount();
 
     updateBalanceDisplays();
-
-    renderTransactions();
-
 
     return true;
 }
 
 
 /* =========================================================
-   ADD COINS
-========================================================= */
+   SPEND COINS
+   ========================================================= */
 
-function addCoins(amount, description) {
+function spendCoins(
+    amount,
+    reason = "Coins spent"
+) {
 
-    if (!currentAccount) {
-        return;
+    getCurrentAccount();
+
+    if (!currentAccount) return false;
+
+    amount = Number(amount);
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+        return false;
     }
 
+    if (currentAccount.balance < amount) {
 
-    currentAccount.balance += amount;
+        alert("Not enough PlayCoins.");
 
+        return false;
+    }
+
+    currentAccount.balance -= amount;
+
+    if (!currentAccount.transactions) {
+        currentAccount.transactions = [];
+    }
 
     currentAccount.transactions.unshift({
 
-        text: description,
+        text: reason,
 
-        amount: amount,
+        amount: -amount,
 
         date: new Date().toLocaleString()
-
     });
-
 
     saveCurrentAccount();
 
     updateBalanceDisplays();
 
-    renderTransactions();
-
+    return true;
 }
 
 
 /* =========================================================
-   PASSES
-========================================================= */
+   DAILY BONUS
+   ========================================================= */
 
-function buyPass(passName, price) {
+function claimDailyBonus() {
 
-    if (!currentAccount) {
+    getCurrentAccount();
+
+    if (!currentAccount) return;
+
+    const today =
+        new Date().toISOString().slice(0, 10);
+
+    if (
+        currentAccount.lastBonusDate ===
+        today
+    ) {
+
+        alert(
+            "You already claimed today's bonus."
+        );
+
         return;
     }
 
+    const reward = 100;
 
-    checkPassExpiration();
+    currentAccount.balance += reward;
 
+    currentAccount.lastBonusDate = today;
+
+    if (!currentAccount.transactions) {
+        currentAccount.transactions = [];
+    }
+
+    currentAccount.transactions.unshift({
+
+        text: "🎁 Daily bonus",
+
+        amount: reward,
+
+        date: new Date().toLocaleString()
+    });
+
+    saveCurrentAccount();
+
+    updateBalanceDisplays();
+
+    updateBonusButton();
+
+    alert(
+        `You received ${reward} PlayCoins!`
+    );
+}
+
+
+/* =========================================================
+   BONUS BUTTON
+   ========================================================= */
+
+function updateBonusButton() {
+
+    const button =
+        document.getElementById("dailyBonusButton");
+
+    if (!button || !currentAccount) return;
+
+    const today =
+        new Date().toISOString().slice(0, 10);
+
+    if (
+        currentAccount.lastBonusDate ===
+        today
+    ) {
+
+        button.disabled = true;
+
+        button.textContent =
+            "Bonus Claimed";
+
+    } else {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Claim Daily Bonus";
+    }
+}
+
+
+/* =========================================================
+   TRANSACTIONS
+   ========================================================= */
+
+function renderTransactions() {
+
+    getCurrentAccount();
+
+    const container =
+        document.getElementById(
+            "transactionsList"
+        );
+
+    if (!container || !currentAccount) {
+        return;
+    }
+
+    container.innerHTML = "";
+
+    const transactions =
+        currentAccount.transactions || [];
+
+    transactions.forEach(transaction => {
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "transaction-item";
+
+        const sign =
+            transaction.amount >= 0
+                ? "+"
+                : "";
+
+        item.innerHTML = `
+            <div>
+                ${escapeHTML(transaction.text)}
+            </div>
+
+            <strong>
+                ${sign}${transaction.amount}
+            </strong>
+
+            <small>
+                ${escapeHTML(transaction.date)}
+            </small>
+        `;
+
+        container.appendChild(item);
+    });
+}
+
+
+/* =========================================================
+   BUY PASS
+   ========================================================= */
+
+function buyPass(passName) {
+
+    getCurrentAccount();
+
+    if (!currentAccount) return;
+
+    const passes = {
+
+        PRO: {
+            price: 5000,
+            days: 10
+        },
+
+        ELITE: {
+            price: 8000,
+            days: 10
+        },
+
+        PREMIUM: {
+            price: 12000,
+            days: 10
+        }
+    };
+
+    const selected =
+        passes[passName];
+
+    if (!selected) return;
 
     if (
         currentAccount.pass === passName &&
@@ -990,134 +871,157 @@ function buyPass(passName, price) {
     ) {
 
         alert(
-            "You already have this pass."
+            `You already have ${passName}.`
         );
 
         return;
-
     }
-
 
     if (
-        !spendCoins(
-            price,
-            "🎟️ Bought " + passName + " Pass"
-        )
+        currentAccount.balance <
+        selected.price
     ) {
 
-        return;
+        alert(
+            "You do not have enough PlayCoins."
+        );
 
+        return;
     }
 
+    currentAccount.balance -=
+        selected.price;
+
+    const expires =
+        new Date();
+
+    expires.setDate(
+        expires.getDate() +
+        selected.days
+    );
 
     currentAccount.pass =
         passName;
 
-
-    const expiration =
-        new Date();
-
-    expiration.setDate(
-        expiration.getDate() + 10
-    );
-
-
     currentAccount.passExpires =
-        expiration.toISOString();
-
+        expires.toISOString();
 
     currentAccount.lastDailyPassReward =
         null;
 
+    if (!currentAccount.transactions) {
+        currentAccount.transactions = [];
+    }
+
+    currentAccount.transactions.unshift({
+
+        text:
+            `🎟️ Purchased ${passName} Pass`,
+
+        amount:
+            -selected.price,
+
+        date:
+            new Date().toLocaleString()
+    });
 
     saveCurrentAccount();
 
-
+    applyPassTheme();
+    updateHeader();
     updatePassPage();
 
-    updateHeader();
-
-
     alert(
-        "🎉 " +
-        passName +
-        " Pass activated for 10 days!"
+        `${passName} Pass activated for ${selected.days} days!`
     );
-
 }
 
 
 /* =========================================================
    PASS PAGE
-========================================================= */
+   ========================================================= */
 
 function updatePassPage() {
 
-    const element =
+    getCurrentAccount();
+
+    if (!currentAccount) return;
+
+    const passName =
         document.getElementById(
             "currentPass"
         );
 
-
-    if (!element || !currentAccount) {
-        return;
-    }
-
-
-    checkPassExpiration();
-
-
-    if (
-        currentAccount.pass === "FREE"
-    ) {
-
-        element.textContent =
-            "CURRENT PASS: FREE";
-
-        return;
-
-    }
-
-
     const expiry =
-        new Date(
-            currentAccount.passExpires
+        document.getElementById(
+            "passExpiry"
         );
 
+    if (passName) {
+        passName.textContent =
+            currentAccount.pass;
+    }
 
-    const remaining =
-        Math.max(
-            0,
-            Math.ceil(
-                (
-                    expiry.getTime() -
-                    Date.now()
-                ) /
-                (1000 * 60 * 60 * 24)
-            )
-        );
+    if (expiry) {
 
+        if (currentAccount.passExpires) {
 
-    element.textContent =
-        "CURRENT PASS: " +
-        currentAccount.pass +
-        " • " +
-        remaining +
-        " DAYS LEFT";
+            expiry.textContent =
+                new Date(
+                    currentAccount.passExpires
+                ).toLocaleString();
 
+        } else {
+
+            expiry.textContent =
+                "No active pass";
+        }
+    }
 }
 
 
 /* =========================================================
    FLAPPY BIRD
-========================================================= */
+   ========================================================= */
+
+let flappyCanvas = null;
+let flappyContext = null;
+
+let flappyBird = null;
+let flappyPipes = [];
+
+let flappyScore = 0;
+let flappyRunning = false;
+let flappyAnimation = null;
+
+const GRAVITY = 0.45;
+const FLAP_POWER = -7;
+const PIPE_SPEED = 3;
+const PIPE_WIDTH = 65;
+const PIPE_GAP = 140;
+const BIRD_LEFT = 80;
+const BIRD_SIZE = 35;
+
 
 function getFlappyCanvas() {
 
-    return document.getElementById(
-        "flappyCanvas"
-    );
+    if (flappyCanvas) {
+        return flappyCanvas;
+    }
 
+    flappyCanvas =
+        document.getElementById(
+            "flappyCanvas"
+        );
+
+    if (!flappyCanvas) {
+        return null;
+    }
+
+    flappyContext =
+        flappyCanvas.getContext("2d");
+
+    return flappyCanvas;
 }
 
 
@@ -1126,473 +1030,268 @@ function startFlappyBird() {
     const canvas =
         getFlappyCanvas();
 
-    if (!canvas) {
-        return;
-    }
+    if (!canvas) return;
 
+    flappyBird = {
 
-    if (flappyAnimation) {
+        x: BIRD_LEFT,
 
-        cancelAnimationFrame(
-            flappyAnimation
-        );
+        y: canvas.height / 2,
 
-    }
+        velocity: 0
+    };
 
-
-    flappyRunning = true;
+    flappyPipes = [];
 
     flappyScore = 0;
 
-    bird = {
+    flappyRunning = true;
 
-        x: 80,
+    addFlappyPipe();
 
-        y: 220,
-
-        velocity: 0,
-
-        size: 18
-
-    };
-
-
-    pipes = [];
-
-
-    document.getElementById(
-        "flappyScore"
-    ).textContent = "0";
-
-
-    const message =
-        document.getElementById(
-            "flappyMessage"
+    if (flappyAnimation) {
+        cancelAnimationFrame(
+            flappyAnimation
         );
-
-
-    if (message) {
-
-        message.classList.add(
-            "hidden"
-        );
-
     }
 
-
-    addFlappyPipe(canvas);
-
-
     flappyLoop();
-
 }
 
 
 function flapBird() {
 
     if (!flappyRunning) {
-
         startFlappyBird();
-
         return;
-
     }
 
-
-    bird.velocity = -7;
-
+    flappyBird.velocity =
+        FLAP_POWER;
 }
 
 
-function addFlappyPipe(canvas) {
+function addFlappyPipe() {
 
-    const gap = 140;
+    const canvas =
+        getFlappyCanvas();
 
-    const minTop = 60;
+    if (!canvas) return;
 
-    const maxTop =
-        canvas.height -
-        gap -
+    const minimum =
         60;
 
+    const maximum =
+        canvas.height -
+        PIPE_GAP -
+        60;
 
     const top =
         Math.floor(
             Math.random() *
-            (maxTop - minTop + 1)
-        ) + minTop;
+            (maximum - minimum + 1)
+        ) + minimum;
 
-
-    pipes.push({
+    flappyPipes.push({
 
         x: canvas.width,
 
-        width: 65,
-
         top: top,
 
-        gap: gap,
-
         passed: false
-
     });
-
 }
 
 
 function flappyLoop() {
 
+    if (!flappyRunning) return;
+
     const canvas =
         getFlappyCanvas();
 
+    if (!canvas) return;
 
-    if (!canvas || !flappyRunning) {
-        return;
-    }
+    flappyContext.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
+    flappyBird.velocity +=
+        GRAVITY;
 
-    const ctx =
-        canvas.getContext("2d");
-
-
-    /* PHYSICS */
-
-    bird.velocity += 0.45;
-
-    bird.y += bird.velocity;
-
-
-    /* PIPE MOVEMENT */
-
-    pipes.forEach(pipe => {
-
-        pipe.x -= 3;
-
-    });
-
+    flappyBird.y +=
+        flappyBird.velocity;
 
     if (
-        pipes.length === 0 ||
-        pipes[pipes.length - 1].x <
-        canvas.width - 250
+        flappyPipes.length === 0 ||
+        flappyPipes[
+            flappyPipes.length - 1
+        ].x <
+        canvas.width - 220
     ) {
 
-        addFlappyPipe(canvas);
-
+        addFlappyPipe();
     }
 
+    flappyPipes.forEach(pipe => {
 
-    /* REMOVE OLD PIPES */
-
-    pipes =
-        pipes.filter(
-            pipe =>
-                pipe.x + pipe.width > 0
-        );
-
-
-    /* SCORE */
-
-    pipes.forEach(pipe => {
+        pipe.x -= PIPE_SPEED;
 
         if (
             !pipe.passed &&
-            pipe.x + pipe.width < bird.x
+            pipe.x + PIPE_WIDTH <
+            flappyBird.x
         ) {
 
             pipe.passed = true;
 
             flappyScore++;
 
-
-            document.getElementById(
-                "flappyScore"
-            ).textContent =
-                flappyScore;
-
+            updateFlappyScore();
         }
-
     });
 
+    flappyPipes =
+        flappyPipes.filter(
+            pipe =>
+                pipe.x +
+                PIPE_WIDTH >
+                0
+        );
 
-    /* COLLISION */
+    drawFlappyBird();
 
-    if (flappyCollision(canvas)) {
+    drawFlappyPipes();
+
+    if (flappyCollision()) {
 
         endFlappyBird();
 
         return;
-
     }
-
-
-    /* DRAW */
-
-    drawFlappyBird(ctx, canvas);
-
 
     flappyAnimation =
         requestAnimationFrame(
             flappyLoop
         );
-
 }
 
 
-function flappyCollision(canvas) {
+function drawFlappyBird() {
 
-    if (
-        bird.y - bird.size < 0 ||
-        bird.y + bird.size > canvas.height
-    ) {
-
-        return true;
-
+    if (!flappyContext || !flappyBird) {
+        return;
     }
 
+    flappyContext.font =
+        `${BIRD_SIZE}px Arial`;
 
-    for (const pipe of pipes) {
-
-        const horizontal =
-            bird.x + bird.size >
-            pipe.x &&
-            bird.x - bird.size <
-            pipe.x + pipe.width;
-
-
-        const hitsTop =
-            bird.y - bird.size <
-            pipe.top;
-
-
-        const hitsBottom =
-            bird.y + bird.size >
-            pipe.top + pipe.gap;
-
-
-        if (
-            horizontal &&
-            (hitsTop || hitsBottom)
-        ) {
-
-            return true;
-
-        }
-
-    }
-
-
-    return false;
-
+    flappyContext.fillText(
+        "🐦",
+        flappyBird.x,
+        flappyBird.y
+    );
 }
 
 
-function drawFlappyBird(ctx, canvas) {
+function drawFlappyPipes() {
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    const canvas =
+        getFlappyCanvas();
 
+    if (!canvas) return;
 
-    /* SKY */
+    flappyContext.fillStyle =
+        "green";
 
-    ctx.fillStyle =
-        "#8bdcff";
+    flappyPipes.forEach(pipe => {
 
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-
-    /* CLOUDS */
-
-    ctx.fillStyle =
-        "rgba(255,255,255,.7)";
-
-
-    for (let i = 0; i < 5; i++) {
-
-        const x =
-            ((i * 150) -
-            ((Date.now() / 25) % 150));
-
-
-        const y =
-            60 + (i % 3) * 80;
-
-
-        ctx.beginPath();
-
-        ctx.arc(
-            x,
-            y,
-            22,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.arc(
-            x + 25,
-            y + 5,
-            18,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.arc(
-            x - 25,
-            y + 5,
-            18,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-    }
-
-
-    /* PIPES */
-
-    pipes.forEach(pipe => {
-
-        ctx.fillStyle =
-            "#37a852";
-
-
-        ctx.fillRect(
+        flappyContext.fillRect(
             pipe.x,
             0,
-            pipe.width,
+            PIPE_WIDTH,
             pipe.top
         );
 
-
-        ctx.fillRect(
+        flappyContext.fillRect(
             pipe.x,
-            pipe.top + pipe.gap,
-            pipe.width,
+            pipe.top + PIPE_GAP,
+            PIPE_WIDTH,
             canvas.height -
             pipe.top -
-            pipe.gap
+            PIPE_GAP
         );
-
-
-        ctx.fillStyle =
-            "#25863e";
-
-
-        ctx.fillRect(
-            pipe.x - 5,
-            pipe.top - 18,
-            pipe.width + 10,
-            18
-        );
-
-
-        ctx.fillRect(
-            pipe.x - 5,
-            pipe.top + pipe.gap,
-            pipe.width + 10,
-            18
-        );
-
     });
+}
 
 
-    /* BIRD */
+function flappyCollision() {
 
-    ctx.fillStyle =
-        "#ffd92f";
+    const canvas =
+        getFlappyCanvas();
 
+    if (!canvas || !flappyBird) {
+        return false;
+    }
 
-    ctx.beginPath();
+    if (
+        flappyBird.y < 0 ||
+        flappyBird.y >
+        canvas.height
+    ) {
 
-    ctx.arc(
-        bird.x,
-        bird.y,
-        bird.size,
-        0,
-        Math.PI * 2
-    );
+        return true;
+    }
 
-    ctx.fill();
+    for (const pipe of flappyPipes) {
 
+        const birdLeft =
+            flappyBird.x;
 
-    /* EYE */
+        const birdRight =
+            flappyBird.x +
+            BIRD_SIZE;
 
-    ctx.fillStyle =
-        "#fff";
+        const birdTop =
+            flappyBird.y -
+            BIRD_SIZE;
 
+        const birdBottom =
+            flappyBird.y;
 
-    ctx.beginPath();
+        const pipeLeft =
+            pipe.x;
 
-    ctx.arc(
-        bird.x + 7,
-        bird.y - 7,
-        6,
-        0,
-        Math.PI * 2
-    );
+        const pipeRight =
+            pipe.x +
+            PIPE_WIDTH;
 
-    ctx.fill();
+        if (
+            birdRight > pipeLeft &&
+            birdLeft < pipeRight
+        ) {
 
+            if (
+                birdTop < pipe.top ||
+                birdBottom >
+                pipe.top + PIPE_GAP
+            ) {
 
-    ctx.fillStyle =
-        "#111";
+                return true;
+            }
+        }
+    }
 
-
-    ctx.beginPath();
-
-    ctx.arc(
-        bird.x + 9,
-        bird.y - 7,
-        3,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fill();
-
-
-    /* BEAK */
-
-    ctx.fillStyle =
-        "#ff8c00";
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        bird.x + bird.size,
-        bird.y
-    );
-
-    ctx.lineTo(
-        bird.x + bird.size + 18,
-        bird.y + 7
-    );
-
-    ctx.lineTo(
-        bird.x + bird.size,
-        bird.y + 12
-    );
-
-    ctx.fill();
-
+    return false;
 }
 
 
 function endFlappyBird() {
 
     flappyRunning = false;
-
 
     if (flappyAnimation) {
 
@@ -1601,139 +1300,87 @@ function endFlappyBird() {
         );
 
         flappyAnimation = null;
-
     }
 
+    const previousBest =
+        Number(
+            localStorage.getItem(
+                FLAPPY_BEST_KEY
+            ) || 0
+        );
 
-    let reward = flappyScore * 10;
+    if (flappyScore > previousBest) {
 
-
-    /* PASS MULTIPLIERS */
-
-    if (
-        currentAccount &&
-        currentAccount.pass === "PRO"
-    ) {
-
-        reward *= 2;
-
+        localStorage.setItem(
+            FLAPPY_BEST_KEY,
+            flappyScore
+        );
     }
 
-
-    if (
-        currentAccount &&
-        currentAccount.pass === "ELITE"
-    ) {
-
-        reward *= 20;
-
-    }
-
-
-    if (
-        currentAccount &&
-        currentAccount.pass === "PREMIUM"
-    ) {
-
-        reward *= 20;
-
-    }
-
+    const reward =
+        Math.max(
+            0,
+            flappyScore * 10
+        );
 
     if (reward > 0) {
 
         addCoins(
             reward,
-            "🐦 Flappy Bird Reward"
+            `🐦 Flappy Bird reward (${flappyScore})`
         );
-
     }
 
-
-    if (flappyScore > flappyBest) {
-
-        flappyBest =
-            flappyScore;
-
-        localStorage.setItem(
-            "kidsScienceFlappyBest",
-            flappyBest
-        );
-
-        const best =
-            document.getElementById(
-                "flappyBest"
-            );
-
-        if (best) {
-            best.textContent =
-                flappyBest;
-        }
-
-    }
+    updateFlappyScore();
+}
 
 
-    const message =
+function updateFlappyScore() {
+
+    const score =
         document.getElementById(
-            "flappyMessage"
+            "flappyScore"
         );
 
-
-    if (message) {
-
-        message.classList.remove(
-            "hidden"
+    const best =
+        document.getElementById(
+            "flappyBest"
         );
 
-
-        message.innerHTML = `
-
-            <h3>💥 GAME OVER</h3>
-
-            <p>
-                Score:
-                <strong>${flappyScore}</strong>
-            </p>
-
-            <p>
-                Reward:
-                <strong>${reward} PlayCoins</strong>
-            </p>
-
-            <button
-                class="main-button"
-                onclick="startFlappyBird()">
-                PLAY AGAIN
-            </button>
-
-        `;
-
+    if (score) {
+        score.textContent =
+            flappyScore;
     }
 
+    if (best) {
+
+        best.textContent =
+            localStorage.getItem(
+                FLAPPY_BEST_KEY
+            ) || 0;
+    }
 }
 
 
 /* =========================================================
-   QUIZ
-========================================================= */
+   SCIENCE QUIZ
+   ========================================================= */
 
-const quizQuestions = [
+const scienceQuestions = [
 
     {
         question:
             "Which planet is known as the Red Planet?",
 
         answers: [
-            "Mars",
             "Earth",
+            "Mars",
             "Venus",
             "Jupiter"
         ],
 
-        correct: "Mars"
-
+        correct: 1
     },
-
 
     {
         question:
@@ -1741,712 +1388,1052 @@ const quizQuestions = [
 
         answers: [
             "Oxygen",
+            "Carbon dioxide",
             "Helium",
-            "Carbon Dioxide",
             "Hydrogen"
         ],
 
-        correct: "Oxygen"
-
+        correct: 0
     },
 
+    {
+        question:
+            "How many legs does a spider have?",
+
+        answers: [
+            "4",
+            "6",
+            "8",
+            "10"
+        ],
+
+        correct: 2
+    },
 
     {
         question:
             "What is H2O commonly called?",
 
         answers: [
-            "Water",
             "Salt",
+            "Water",
             "Oxygen",
             "Sugar"
         ],
 
-        correct: "Water"
-
+        correct: 1
     },
-
 
     {
         question:
-            "Which star is closest to Earth?",
+            "What force keeps us on Earth?",
 
         answers: [
-            "The Sun",
-            "Sirius",
-            "Polaris",
-            "Vega"
+            "Gravity",
+            "Light",
+            "Sound",
+            "Magnetism"
         ],
 
-        correct: "The Sun"
-
-    },
-
-
-    {
-        question:
-            "How many planets are in our Solar System?",
-
-        answers: [
-            "8",
-            "7",
-            "9",
-            "10"
-        ],
-
-        correct: "8"
-
+        correct: 0
     }
-
 ];
+
+let quizIndex = 0;
+let quizScore = 0;
 
 
 function initializeQuiz() {
 
     quizIndex = 0;
-
     quizScore = 0;
 
     renderQuizQuestion();
-
 }
 
 
 function renderQuizQuestion() {
 
-    const questionElement =
+    const question =
         document.getElementById(
             "quizQuestion"
         );
 
-    const answersElement =
+    const answers =
         document.getElementById(
             "quizAnswers"
         );
 
-    const scoreElement =
-        document.getElementById(
-            "quizScore"
-        );
-
-
     if (
-        !questionElement ||
-        !answersElement
+        !question ||
+        !answers
     ) {
-
         return;
-
     }
 
+    const current =
+        scienceQuestions[
+            quizIndex
+        ];
 
-    if (
-        quizIndex >=
-        quizQuestions.length
-    ) {
+    question.textContent =
+        current.question;
 
-        questionElement.innerHTML =
-            "🎉 QUIZ COMPLETE!";
+    answers.innerHTML = "";
 
-        answersElement.innerHTML = `
-
-            <button
-                class="main-button"
-                onclick="initializeQuiz()">
-                PLAY AGAIN
-            </button>
-
-        `;
-
-        return;
-
-    }
-
-
-    const question =
-        quizQuestions[quizIndex];
-
-
-    questionElement.textContent =
-        question.question;
-
-
-    answersElement.innerHTML = "";
-
-
-    question.answers.forEach(
-        answer => {
+    current.answers.forEach(
+        (answer, index) => {
 
             const button =
-                document.createElement("button");
-
-
-            button.className =
-                "quiz-answer";
-
+                document.createElement(
+                    "button"
+                );
 
             button.textContent =
                 answer;
 
-
-            button.onclick =
-                function() {
-
-                    answerQuiz(answer);
-
-                };
-
-
-            answersElement.appendChild(
-                button
+            button.addEventListener(
+                "click",
+                () =>
+                    answerQuiz(index)
             );
 
+            answers.appendChild(
+                button
+            );
         }
     );
-
-
-    if (scoreElement) {
-
-        scoreElement.textContent =
-            quizScore;
-
-    }
-
 }
 
 
-function answerQuiz(answer) {
+function answerQuiz(index) {
 
-    const question =
-        quizQuestions[quizIndex];
-
+    const current =
+        scienceQuestions[
+            quizIndex
+        ];
 
     if (
-        answer ===
-        question.correct
+        index === current.correct
     ) {
 
         quizScore++;
 
-
-        let reward = 25;
-
-
-        if (
-            currentAccount &&
-            currentAccount.pass === "PRO"
-        ) {
-
-            reward *= 2;
-
-        }
-
-
-        if (
-            currentAccount &&
-            currentAccount.pass === "ELITE"
-        ) {
-
-            reward *= 3;
-
-        }
-
-
-        if (
-            currentAccount &&
-            currentAccount.pass === "PREMIUM"
-        ) {
-
-            reward *= 5;
-
-        }
-
-
         addCoins(
-            reward,
-            "🧠 Science Quiz Reward"
+            10,
+            "🧠 Science Quiz reward"
         );
-
-
-        alert(
-            "✅ Correct! +" +
-            reward +
-            " PlayCoins"
-        );
-
-
-    } else {
-
-        alert(
-            "❌ Not quite! Try the next question."
-        );
-
     }
-
 
     quizIndex++;
 
-    renderQuizQuestion();
+    if (
+        quizIndex >=
+        scienceQuestions.length
+    ) {
 
+        alert(
+            `Quiz complete! Score: ${quizScore}/${scienceQuestions.length}`
+        );
+
+        quizIndex = 0;
+        quizScore = 0;
+    }
+
+    renderQuizQuestion();
 }
 
 
 /* =========================================================
    WATCH TOGETHER
-========================================================= */
+   ========================================================= */
 
 function startWatchTogether(videoID) {
 
+    if (!videoID) return;
+
     localStorage.setItem(
-        "kidsScienceWatchVideo",
+        WATCH_VIDEO_KEY,
         videoID
     );
 
-
     window.location.href =
         "chat.html";
-
 }
 
 
 /* =========================================================
-   CHAT
-========================================================= */
+   =========================================================
+   FIREBASE LIVE CHAT
+   =========================================================
+   ========================================================= */
 
-function getChatMessages() {
 
-    try {
+/*
+   Database structure:
 
-        return JSON.parse(
-            localStorage.getItem(CHAT_KEY) ||
-            "[]"
+   rooms
+      science-main
+         messages
+            messageID
+               uid
+               name
+               emoji
+               text
+               timestamp
+
+         players
+            UID
+               uid
+               name
+               emoji
+               online
+               lastSeen
+*/
+
+
+const SCIENCE_ROOM_ID =
+    "science-main";
+
+
+function getChatRef() {
+
+    return ref(
+        db,
+        `rooms/${SCIENCE_ROOM_ID}/messages`
+    );
+}
+
+
+function getPlayersRef() {
+
+    return ref(
+        db,
+        `rooms/${SCIENCE_ROOM_ID}/players`
+    );
+}
+
+
+/* =========================================================
+   FIREBASE CONNECTION STATUS
+   ========================================================= */
+
+function initializeFirebaseConnection() {
+
+    const connectedRef =
+        ref(
+            db,
+            ".info/connected"
         );
 
-    } catch {
+    onValue(
+        connectedRef,
+        snapshot => {
 
-        return [];
+            const connected =
+                snapshot.val() === true;
 
-    }
+            const status =
+                document.getElementById(
+                    "firebaseStatus"
+                );
 
-}
+            if (status) {
 
+                if (connected) {
 
-function saveChatMessages(messages) {
+                    status.textContent =
+                        "🟢 Live";
 
-    localStorage.setItem(
-        CHAT_KEY,
-        JSON.stringify(messages)
+                    status.classList.add(
+                        "online"
+                    );
+
+                    status.classList.remove(
+                        "offline"
+                    );
+
+                } else {
+
+                    status.textContent =
+                        "🔴 Offline";
+
+                    status.classList.add(
+                        "offline"
+                    );
+
+                    status.classList.remove(
+                        "online"
+                    );
+                }
+            }
+
+            console.log(
+                connected
+                    ? "Firebase connected"
+                    : "Firebase disconnected"
+            );
+        }
     );
-
 }
 
 
-function sendChatMessage(event) {
+/* =========================================================
+   SEND LIVE CHAT MESSAGE
+   ========================================================= */
 
-    event.preventDefault();
+async function sendChatMessage() {
 
+    getCurrentAccount();
+
+    if (!currentAccount) {
+
+        alert(
+            "Please log in first."
+        );
+
+        return;
+    }
 
     const input =
         document.getElementById(
             "chatInput"
         );
 
-
-    if (!input || !currentAccount) {
-        return;
-    }
-
+    if (!input) return;
 
     const text =
         input.value.trim();
 
+    if (!text) return;
 
-    if (!text) {
+    if (text.length > 300) {
+
+        alert(
+            "Message is too long."
+        );
+
         return;
     }
 
+    try {
 
-    const messages =
-        getChatMessages();
+        const messagesRef =
+            getChatRef();
 
+        const newMessageRef =
+            push(messagesRef);
 
-    messages.push({
+        await set(
+            newMessageRef,
+            {
 
-        name: currentAccount.name,
+                uid:
+                    currentAccount.uid,
 
-        emoji: currentAccount.emoji,
+                name:
+                    currentAccount.name,
 
-        text: text,
+                emoji:
+                    currentAccount.emoji,
 
-        time:
-            new Date().toLocaleTimeString()
+                text:
+                    text,
 
-    });
+                timestamp:
+                    serverTimestamp()
+            }
+        );
 
+        input.value = "";
 
-    saveChatMessages(messages);
+        input.focus();
 
+    } catch (error) {
 
-    input.value = "";
+        console.error(
+            "Firebase chat error:",
+            error
+        );
 
-
-    renderChatMessages();
-
+        alert(
+            "Could not send message. Check your Firebase Database Rules."
+        );
+    }
 }
 
 
-function renderChatMessages() {
+/* =========================================================
+   ENTER KEY CHAT
+   ========================================================= */
+
+function initializeChatInput() {
+
+    const input =
+        document.getElementById(
+            "chatInput"
+        );
+
+    const button =
+        document.getElementById(
+            "sendChatButton"
+        );
+
+    if (button) {
+
+        button.addEventListener(
+            "click",
+            sendChatMessage
+        );
+    }
+
+    if (input) {
+
+        input.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+                    sendChatMessage();
+                }
+            }
+        );
+    }
+}
+
+
+/* =========================================================
+   RECEIVE LIVE CHAT MESSAGES
+   ========================================================= */
+
+function initializeLiveChat() {
+
+    const messagesRef =
+        getChatRef();
+
+    onValue(
+        messagesRef,
+        snapshot => {
+
+            const data =
+                snapshot.val();
+
+            const messages = [];
+
+            if (data) {
+
+                Object.keys(data)
+                    .forEach(key => {
+
+                        messages.push({
+
+                            id: key,
+
+                            ...data[key]
+                        });
+                    });
+            }
+
+            messages.sort(
+                (a, b) =>
+                    (a.timestamp || 0) -
+                    (b.timestamp || 0)
+            );
+
+            renderChatMessages(
+                messages
+            );
+        },
+        error => {
+
+            console.error(
+                "Could not read Firebase chat:",
+                error
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   RENDER LIVE CHAT
+   ========================================================= */
+
+function renderChatMessages(messages) {
 
     const container =
         document.getElementById(
             "chatMessages"
         );
 
-
-    if (!container) {
-        return;
-    }
-
-
-    const messages =
-        getChatMessages();
-
+    if (!container) return;
 
     container.innerHTML = "";
 
+    messages.forEach(message => {
 
-    messages
-        .slice(-100)
-        .forEach(message => {
+        const item =
+            document.createElement(
+                "div"
+            );
 
-            const div =
-                document.createElement("div");
+        item.className =
+            "chat-message";
 
+        const date =
+            message.timestamp
+                ? new Date(
+                    message.timestamp
+                ).toLocaleTimeString(
+                    [],
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                )
+                : "";
 
-            div.className =
-                "chat-message";
+        item.innerHTML = `
 
+            <div class="chat-avatar">
+                ${escapeHTML(
+                    message.emoji || "🙂"
+                )}
+            </div>
 
-            div.innerHTML = `
+            <div class="chat-content">
 
                 <strong>
-                    ${escapeHTML(message.emoji)}
-                    ${escapeHTML(message.name)}
+                    ${escapeHTML(
+                        message.name || "Player"
+                    )}
                 </strong>
 
-                <br>
+                <span class="chat-time">
+                    ${escapeHTML(date)}
+                </span>
 
-                ${escapeHTML(message.text)}
+                <div class="chat-text">
+                    ${escapeHTML(
+                        message.text || ""
+                    )}
+                </div>
 
-                <small>
-                    ${escapeHTML(message.time)}
-                </small>
+            </div>
+        `;
 
-            `;
-
-
-            container.appendChild(div);
-
-        });
-
+        container.appendChild(item);
+    });
 
     container.scrollTop =
         container.scrollHeight;
-
 }
 
 
-function renderPlayerList() {
+/* =========================================================
+   LIVE PLAYER PRESENCE
+   ========================================================= */
+
+async function registerPlayerOnline() {
+
+    getCurrentAccount();
+
+    if (!currentAccount) return;
+
+    const playerRef =
+        ref(
+            db,
+            `rooms/${SCIENCE_ROOM_ID}/players/${currentAccount.uid}`
+        );
+
+    try {
+
+        await set(
+            playerRef,
+            {
+
+                uid:
+                    currentAccount.uid,
+
+                name:
+                    currentAccount.name,
+
+                emoji:
+                    currentAccount.emoji,
+
+                online:
+                    true,
+
+                lastSeen:
+                    serverTimestamp()
+            }
+        );
+
+        await onDisconnect(
+            playerRef
+        ).update({
+
+            online: false,
+
+            lastSeen:
+                serverTimestamp()
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Presence error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   REMOVE PLAYER
+   ========================================================= */
+
+async function removePlayerOnline(
+    uid = null
+) {
+
+    if (!uid) {
+
+        getCurrentAccount();
+
+        if (!currentAccount) return;
+
+        uid =
+            currentAccount.uid;
+    }
+
+    const playerRef =
+        ref(
+            db,
+            `rooms/${SCIENCE_ROOM_ID}/players/${uid}`
+        );
+
+    try {
+
+        await set(
+            playerRef,
+            null
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Could not remove player:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   LIVE PLAYER LIST
+   ========================================================= */
+
+function initializeLivePlayerList() {
+
+    const playersRef =
+        getPlayersRef();
+
+    onValue(
+        playersRef,
+        snapshot => {
+
+            const data =
+                snapshot.val();
+
+            const players = [];
+
+            if (data) {
+
+                Object.keys(data)
+                    .forEach(uid => {
+
+                        players.push(
+                            data[uid]
+                        );
+                    });
+            }
+
+            renderPlayerList(
+                players
+            );
+        },
+        error => {
+
+            console.error(
+                "Player list error:",
+                error
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   RENDER PLAYER LIST
+   ========================================================= */
+
+function renderPlayerList(players) {
 
     const container =
         document.getElementById(
             "playerList"
         );
 
-
-    if (!container) {
-        return;
-    }
-
-
-    loadAccounts();
-
+    if (!container) return;
 
     container.innerHTML = "";
 
+    const onlinePlayers =
+        players.filter(
+            player =>
+                player.online === true
+        );
 
-    accounts.forEach(account => {
+    onlinePlayers.forEach(player => {
 
-        const div =
-            document.createElement("div");
+        const item =
+            document.createElement(
+                "div"
+            );
 
+        item.className =
+            "player-item";
 
-        div.className =
-            "player";
+        item.innerHTML = `
 
+            <span class="player-avatar">
+                ${escapeHTML(
+                    player.emoji || "🙂"
+                )}
+            </span>
 
-        div.innerHTML = `
+            <span class="player-name">
+                ${escapeHTML(
+                    player.name || "Player"
+                )}
+            </span>
 
-            ${escapeHTML(account.emoji)}
-            <strong>
-                ${escapeHTML(account.name)}
-            </strong>
-
+            <span class="player-online">
+                🟢
+            </span>
         `;
 
-
-        container.appendChild(div);
-
+        container.appendChild(item);
     });
 
+    const count =
+        document.getElementById(
+            "onlinePlayerCount"
+        );
+
+    if (count) {
+
+        count.textContent =
+            onlinePlayers.length;
+    }
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 
 /* =========================================================
    COMING SOON
-========================================================= */
+   ========================================================= */
 
 function initializeComingSoon() {
 
-    const params =
+    const page =
         new URLSearchParams(
             window.location.search
-        );
-
-
-    const page =
-        params.get("page");
-
+        ).get("type");
 
     const title =
         document.getElementById(
-            "comingTitle"
+            "comingSoonTitle"
         );
 
+    if (!title) return;
 
-    const text =
-        document.getElementById(
-            "comingText"
-        );
-
-
-    const names = {
-
-        project: [
-            "🧪 PROJECTS COMING SOON",
-            "Science projects are being developed."
-        ],
-
-        events: [
-            "📅 EVENTS COMING SOON",
-            "Live science events are coming soon."
-        ],
-
-        courses: [
-            "🎓 COURSES COMING SOON",
-            "Full science courses are coming soon."
-        ]
-
-    };
-
-
-    if (
-        page &&
-        names[page]
-    ) {
+    if (page === "project") {
 
         title.textContent =
-            names[page][0];
+            "PROJECTS COMING SOON";
 
-        text.textContent =
-            names[page][1];
+    } else if (page === "events") {
 
+        title.textContent =
+            "EVENTS COMING SOON";
+
+    } else if (page === "courses") {
+
+        title.textContent =
+            "COURSES COMING SOON";
     }
-
 }
 
 
 /* =========================================================
-   HTML SAFETY
-========================================================= */
+   ACCOUNT BUTTONS
+   ========================================================= */
 
-function escapeHTML(value) {
+function initializeAccountButtons() {
 
-    return String(value)
+    const accountButton =
+        document.getElementById(
+            "accountButton"
+        );
 
-        .replace(/&/g, "&amp;")
+    const closeButton =
+        document.getElementById(
+            "closeAccountModal"
+        );
 
-        .replace(/</g, "&lt;")
+    const logoutButton =
+        document.getElementById(
+            "logoutButton"
+        );
 
-        .replace(/>/g, "&gt;")
+    const deleteButton =
+        document.getElementById(
+            "deleteAccountButton"
+        );
 
-        .replace(/"/g, "&quot;")
+    if (accountButton) {
 
-        .replace(/'/g, "&#039;");
+        accountButton.addEventListener(
+            "click",
+            openAccountModal
+        );
+    }
 
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeAccountModal
+        );
+    }
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            logoutCurrentAccount
+        );
+    }
+
+    if (deleteButton) {
+
+        deleteButton.addEventListener(
+            "click",
+            deleteCurrentAccount
+        );
+    }
 }
 
 
 /* =========================================================
    PAGE INITIALIZATION
-========================================================= */
+   ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    function() {
+    () => {
+
+        loadAccounts();
 
         const page =
             document.body.dataset.page;
-
 
         if (page === "login") {
 
             initializeLoginPage();
 
             return;
-
         }
-
 
         if (!requireLogin()) {
             return;
         }
 
-
-        processDailyPassReward();
-
         updateHeader();
 
-        updateBalanceDisplays();
+        initializeAccountButtons();
 
+        updateBonusButton();
 
-        if (page === "wallet") {
+        renderTransactions();
 
-            updateBonusButton();
+        updatePassPage();
 
-            renderTransactions();
+        initializeComingSoon();
 
+        initializeFirebaseConnection();
+
+        /*
+           Register the current player with Firebase.
+        */
+        registerPlayerOnline();
+
+        /*
+           Start live chat listeners only when
+           the chat page is open.
+        */
+        if (page === "chat") {
+
+            initializeChatInput();
+
+            initializeLiveChat();
+
+            initializeLivePlayerList();
         }
 
-
-        if (page === "passes") {
-
-            updatePassPage();
-
-        }
-
-
+        /*
+           Games
+        */
         if (page === "games") {
-
-            flappyBest =
-                Number(
-                    localStorage.getItem(
-                        "kidsScienceFlappyBest"
-                    ) || 0
-                );
-
-
-            const best =
-                document.getElementById(
-                    "flappyBest"
-                );
-
-
-            if (best) {
-                best.textContent =
-                    flappyBest;
-            }
-
 
             initializeQuiz();
 
+            updateFlappyScore();
 
-            const canvas =
+            const flappyCanvas =
                 document.getElementById(
                     "flappyCanvas"
                 );
 
+            if (flappyCanvas) {
 
-            if (canvas) {
-
-                canvas.addEventListener(
+                flappyCanvas.addEventListener(
                     "click",
                     flapBird
                 );
 
-
-                canvas.addEventListener(
+                flappyCanvas.addEventListener(
                     "touchstart",
-                    function(event) {
+                    event => {
 
                         event.preventDefault();
 
                         flapBird();
-
                     },
-                    { passive: false }
+                    {
+                        passive: false
+                    }
                 );
+            }
 
+            document.addEventListener(
+                "keydown",
+                event => {
 
-                document.addEventListener(
-                    "keydown",
-                    function(event) {
+                    if (
+                        event.code ===
+                        "Space"
+                    ) {
 
-                        if (
-                            event.code ===
-                            "Space"
-                        ) {
+                        const canvas =
+                            document.getElementById(
+                                "flappyCanvas"
+                            );
+
+                        if (canvas) {
 
                             event.preventDefault();
 
                             flapBird();
-
                         }
-
                     }
-                );
-
-            }
-
+                }
+            );
         }
 
-
-        if (page === "chat") {
-
-            renderChatMessages();
-
-            renderPlayerList();
-
-
-            setInterval(
-                function() {
-
-                    renderChatMessages();
-
-                    renderPlayerList();
-
-                },
-                1000
+        /*
+           Daily bonus button
+        */
+        const bonusButton =
+            document.getElementById(
+                "dailyBonusButton"
             );
 
+        if (bonusButton) {
+
+            bonusButton.addEventListener(
+                "click",
+                claimDailyBonus
+            );
         }
-
-
-        if (page === "coming") {
-
-            initializeComingSoon();
-
-        }
-
     }
 );
 
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "chrono-fa677.firebaseapp.com",
-    databaseURL: "https://chrono-fa677-default-rtdb.firebaseio.com/",
-    projectId: "chrono-fa677",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+
+/* =========================================================
+   GLOBAL FUNCTIONS
+   =========================================================
+   These allow existing HTML onclick="" buttons to
+   continue working.
+   ========================================================= */
+
+window.enterScienceWorld =
+    enterScienceWorld;
+
+window.openAccountModal =
+    openAccountModal;
+
+window.closeAccountModal =
+    closeAccountModal;
+
+window.logoutCurrentAccount =
+    logoutCurrentAccount;
+
+window.deleteCurrentAccount =
+    deleteCurrentAccount;
+
+window.claimDailyBonus =
+    claimDailyBonus;
+
+window.buyPass =
+    buyPass;
+
+window.startFlappyBird =
+    startFlappyBird;
+
+window.flapBird =
+    flapBird;
+
+window.answerQuiz =
+    answerQuiz;
+
+window.startWatchTogether =
+    startWatchTogether;
+
+window.sendChatMessage =
+    sendChatMessage;
+
+window.updateHeader =
+    updateHeader;
