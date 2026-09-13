@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIDS SCIENCE - Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="chat">
+
+<div class="site">
+
+<header class="topbar">
+
+    <div class="brand">🔬 KIDS SCIENCE</div>
+
+    <button class="account-button" onclick="openAccountModal()">
+        <span id="headerAvatar">🙂</span>
+        <span id="headerName">Player</span>
+    </button>
+
+</header>
+
+
+<nav class="navigation">
+
+    <a class="nav-item" href="home.html">🏠 Home</a>
+    <a class="nav-item" href="games.html">🎮 Games</a>
+    <a class="nav-item" href="videos.html">🎬 Video</a>
+    <a class="nav-item" href="wallet.html">💰 Wallet</a>
+    <a class="nav-item active" href="chat.html">💬 Chat</a>
+    <a class="nav-item" href="passes.html">🎟️ Passes</a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=project">
+        🧪 Project
+        <small>Coming Soon</small>
+    </a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=events">
+        📅 Events
+        <small>Coming Soon</small>
+    </a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=courses">
+        🎓 Courses
+        <small>Coming Soon</small>
+    </a>
+
+</nav>
+
+
+<main class="main-content">
+
+<section class="page-heading">
+
+    <h1>💬 LIVE SCIENCE ROOM</h1>
+
+    <p>
+        Chat and learn together.
+    </p>
+
+</section>
+
+
+<section class="chat-layout">
+
+    <aside class="players-panel">
+
+        <h2>👥 PLAYERS</h2>
+
+        <div id="playerList">
+        </div>
+
+    </aside>
+
+
+    <section class="chat-panel">
+
+        <div class="room-header">
+
+            <strong>
+                LIVE ROOM
+            </strong>
+
+            <span>
+                ROOM: SCIENCE-001
+            </span>
+
+        </div>
+
+
+        <div id="chatMessages" class="chat-messages">
+        </div>
+
+
+        <form
+            class="chat-form"
+            onsubmit="sendChatMessage(event)">
+
+            <input
+                type="text"
+                id="chatInput"
+                maxlength="200"
+                placeholder="Type your message..."
+                autocomplete="off"
+            >
+
+            <button type="submit">
+                SEND
+            </button>
+
+        </form>
+
+    </section>
+
+</section>
+
+</main>
+
+</div>
+
+
+<div id="accountModal" class="modal">
+
+    <div class="modal-box">
+
+        <button class="close-button" onclick="closeAccountModal()">×</button>
+
+        <div id="modalAvatar" class="modal-avatar">🙂</div>
+
+        <h2 id="modalName">Player</h2>
+
+        <p id="modalUID">UID</p>
+
+        <button class="modal-button" onclick="logoutCurrentAccount()">
+            LOG OUT
+        </button>
+
+        <button class="modal-button danger" onclick="deleteCurrentAccount()">
+            DELETE ACCOUNT
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>

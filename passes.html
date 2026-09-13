@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIDS SCIENCE - Passes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body data-page="passes">
+
+<div class="site">
+
+<header class="topbar">
+
+    <div class="brand">
+        🔬 KIDS SCIENCE
+    </div>
+
+    <button class="account-button" onclick="openAccountModal()">
+        <span id="headerAvatar">🙂</span>
+        <span id="headerName">Player</span>
+    </button>
+
+</header>
+
+
+<nav class="navigation">
+
+    <a class="nav-item" href="home.html">🏠 Home</a>
+    <a class="nav-item" href="games.html">🎮 Games</a>
+    <a class="nav-item" href="videos.html">🎬 Video</a>
+    <a class="nav-item" href="wallet.html">💰 Wallet</a>
+    <a class="nav-item" href="chat.html">💬 Chat</a>
+    <a class="nav-item active" href="passes.html">🎟️ Passes</a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=project">
+        🧪 Project
+        <small>Coming Soon</small>
+    </a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=events">
+        📅 Events
+        <small>Coming Soon</small>
+    </a>
+
+    <a class="nav-item coming" href="coming-soon.html?page=courses">
+        🎓 Courses
+        <small>Coming Soon</small>
+    </a>
+
+</nav>
+
+
+<main class="main-content">
+
+<section class="page-heading">
+
+    <h1>🎟️ SCIENCE PASSES</h1>
+
+    <p>
+        Unlock more rewards, games and science features.
+    </p>
+
+    <div id="currentPass" class="current-pass">
+        Checking your pass...
+    </div>
+
+</section>
+
+
+<section class="passes-grid">
+
+
+<!-- PRO -->
+
+<div class="pass-card pro-pass">
+
+    <div class="pass-badge">
+        PRO
+    </div>
+
+    <h2>🔵 PRO</h2>
+
+    <div class="pass-price">
+        5000
+        <small>PLAYCOINS</small>
+    </div>
+
+    <p class="pass-duration">
+        10 DAYS
+    </p>
+
+    <div class="pass-features">
+
+        <div>🪙 500 PlayCoins daily</div>
+        <div>🎬 Video prices 50 coins cheaper</div>
+        <div>🎮 2× game reward coins</div>
+        <div>✨ Blue PRO avatar frame</div>
+        <div>🎁 Daily PRO bonus offers</div>
+
+    </div>
+
+    <button
+        class="pass-button"
+        onclick="buyPass('PRO', 5000)">
+        BUY PRO
+    </button>
+
+</div>
+
+
+<!-- ELITE -->
+
+<div class="pass-card elite-pass">
+
+    <div class="pass-badge">
+        ELITE
+    </div>
+
+    <h2>🟡 ELITE</h2>
+
+    <div class="pass-price">
+        8000
+        <small>PLAYCOINS</small>
+    </div>
+
+    <p class="pass-duration">
+        10 DAYS
+    </p>
+
+    <div class="pass-features">
+
+        <div>🪙 750 PlayCoins daily</div>
+        <div>🎬 Videos 100 coins cheaper</div>
+        <div>🎮 3× game reward coins</div>
+        <div>✨ Golden ELITE avatar frame</div>
+        <div>🎁 Daily special offers</div>
+        <div>🎬 100 coin video purchase bonus</div>
+        <div>🏆 Flappy score ×10 ×2 bonus</div>
+        <div>🔔 Latest science video alerts</div>
+
+    </div>
+
+    <button
+        class="pass-button"
+        onclick="buyPass('ELITE', 8000)">
+        BUY ELITE
+    </button>
+
+</div>
+
+
+<!-- PREMIUM -->
+
+<div class="pass-card premium-pass">
+
+    <div class="pass-badge">
+        PREMIUM
+    </div>
+
+    <h2>🟣 PREMIUM</h2>
+
+    <div class="pass-price">
+        12000
+        <small>PLAYCOINS</small>
+    </div>
+
+    <p class="pass-duration">
+        10 DAYS
+    </p>
+
+    <div class="pass-features">
+
+        <div>🪙 400 PlayCoins daily</div>
+        <div>🎬 Videos 200 coins cheaper</div>
+        <div>🎮 5× game reward coins</div>
+        <div>✨ Shiny purple PREMIUM frame</div>
+        <div>🎁 Daily premium offers</div>
+        <div>🎬 Premium video rewards</div>
+        <div>🏆 Flappy score ×10 ×2 bonus</div>
+        <div>🪙 Extra game completion rewards</div>
+        <div>🎁 Buy 1 Get 1 Free offers</div>
+        <div>💎 Extra subscription discounts</div>
+        <div>🔔 Latest science notifications</div>
+        <div>🚀 Priority science activities</div>
+
+    </div>
+
+    <button
+        class="pass-button"
+        onclick="buyPass('PREMIUM', 12000)">
+        BUY PREMIUM
+    </button>
+
+</div>
+
+
+</section>
+
+</main>
+
+</div>
+
+
+<div id="accountModal" class="modal">
+
+    <div class="modal-box">
+
+        <button class="close-button" onclick="closeAccountModal()">×</button>
+
+        <div id="modalAvatar" class="modal-avatar">🙂</div>
+
+        <h2 id="modalName">Player</h2>
+
+        <p id="modalUID">UID</p>
+
+        <button class="modal-button" onclick="logoutCurrentAccount()">
+            LOG OUT
+        </button>
+
+        <button class="modal-button danger" onclick="deleteCurrentAccount()">
+            DELETE ACCOUNT
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
