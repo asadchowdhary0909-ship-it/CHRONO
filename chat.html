@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,7 +11,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>KIDS SCIENCE - Live Chat</title>
+    <title>KID WORLD - Live Chat</title>
 
     <link
         rel="stylesheet"
@@ -24,367 +24,171 @@
 <body data-page="chat">
 
 
-    <!-- =====================================================
-         TOP BAR
-         ===================================================== -->
-
-    <header class="topbar">
-
-        <div class="brand">
-            🧪 KIDS SCIENCE
-        </div>
+    <div class="world-container">
 
 
-        <div
-            class="account-button"
-            id="accountButton"
-        >
+        <header class="topbar">
 
-            <span data-player-avatar>
-                🙂
-            </span>
-
-            <span data-player-name>
-                Player
-            </span>
-
-        </div>
-
-    </header>
-
-
-
-    <!-- =====================================================
-         NAVIGATION
-         ===================================================== -->
-
-    <nav class="nav-ribbon">
-
-        <a href="home.html">
-            🏠 Home
-        </a>
-
-        <a href="games.html">
-            🎮 Games
-        </a>
-
-        <a href="videos.html">
-            🎬 Video
-        </a>
-
-        <a href="wallet.html">
-            💰 Wallet
-        </a>
-
-        <a
-            href="chat.html"
-            class="active"
-        >
-            💬 Chat
-        </a>
-
-        <a href="passes.html">
-            🎟️ Passes
-        </a>
-
-        <a href="coming-soon.html?type=project">
-            🧪 Project
-        </a>
-
-        <a href="coming-soon.html?type=events">
-            📅 Events
-        </a>
-
-        <a href="coming-soon.html?type=courses">
-            🎓 Courses
-        </a>
-
-    </nav>
-
-
-
-    <!-- =====================================================
-         MAIN CHAT AREA
-         ===================================================== -->
-
-    <main class="page-container">
-
-
-        <!-- =================================================
-             LIVE SCIENCE ROOM
-             ================================================= -->
-
-        <section class="hero-card">
-
-            <h1>
-                💬 LIVE SCIENCE ROOM
-            </h1>
-
-            <p>
-                Chat with other young scientists in real time!
-            </p>
-
-
-            <!-- Firebase connection indicator -->
-
-            <div
-                id="firebaseStatus"
-                class="firebase-status"
+            <a
+                href="home.html"
+                class="brand"
             >
-                🔴 Connecting...
-            </div>
-
-        </section>
+                🌍 KID WORLD
+            </a>
 
 
+            <div class="profile">
 
-        <!-- =================================================
-             PLAYER LIST
-             ================================================= -->
-
-        <section class="content-card">
-
-            <div class="section-title">
-
-                <h2>
-                    👥 ONLINE PLAYERS
-                </h2>
-
-                <span>
-                    <span id="onlinePlayerCount">0</span>
-                    online
-                </span>
-
-            </div>
-
-
-            <div
-                id="playerList"
-                class="player-list"
-            >
-
-                <div class="empty-message">
-                    Waiting for players...
+                <div
+                    class="avatar"
+                    id="avatar"
+                >
+                    😊
                 </div>
 
-            </div>
 
-        </section>
+                <div class="profile-info">
 
+                    <strong id="playerName">
+                        Player
+                    </strong>
 
+                    <small id="playerUid">
+                        UID: KID-000000
+                    </small>
 
-        <!-- =================================================
-             WATCH TOGETHER
-             ================================================= -->
-
-        <section class="content-card">
-
-            <div class="section-title">
-
-                <h2>
-                    🎬 WATCH TOGETHER
-                </h2>
-
-            </div>
-
-
-            <div class="watch-room">
-
-                <p>
-                    Start a science video from the Video page
-                    to watch together with your room.
-                </p>
+                </div>
 
 
                 <a
-                    href="videos.html"
-                    class="main-button"
+                    href="accounts.html"
+                    class="account-button"
                 >
-                    🎬 OPEN VIDEOS
+                    ⚙️
                 </a>
 
             </div>
 
-        </section>
+        </header>
 
 
 
-        <!-- =================================================
-             CHAT BOX
-             ================================================= -->
+        <nav class="navigation">
 
-        <section class="content-card chat-card">
-
-
-            <div class="section-title">
-
-                <h2>
-                    💬 LIVE CHAT
-                </h2>
-
-                <span>
-                    🟢 LIVE
-                </span>
-
-            </div>
-
-
-
-            <!-- Messages appear here -->
-
-            <div
-                id="chatMessages"
-                class="chat-messages"
+            <a
+                href="home.html"
+                class="nav-button"
             >
+                🏠 Home
+            </a>
 
-                <div class="empty-message">
-                    Loading live chat...
+
+            <a
+                href="games.html"
+                class="nav-button"
+            >
+                🐦 Games
+            </a>
+
+
+            <a
+                href="videos.html"
+                class="nav-button"
+            >
+                📺 Video Shop
+            </a>
+
+
+            <a
+                href="wallet.html"
+                class="nav-button"
+            >
+                🪙 Wallet
+            </a>
+
+
+            <a
+                href="chat.html"
+                class="nav-button active"
+            >
+                💬 Live Chat
+            </a>
+
+        </nav>
+
+
+
+        <main>
+
+
+            <section class="page">
+
+
+                <div class="section-title">
+
+                    <h2>
+                        💬 Live Chat
+                    </h2>
+
+                    <p>
+                        Keep the chat friendly and safe!
+                    </p>
+
                 </div>
 
-            </div>
+
+
+                <div class="chat-box">
+
+
+                    <div id="messages">
+                    </div>
 
 
 
-            <!-- Message input -->
+                    <div class="chat-input">
 
-            <div class="chat-input-area">
-
-                <input
-                    id="chatInput"
-                    type="text"
-                    maxlength="300"
-                    autocomplete="off"
-                    placeholder="Type your message..."
-                >
+                        <input
+                            type="text"
+                            id="chatInput"
+                            placeholder="Type a safe friendly message..."
+                            maxlength="250"
+                            autocomplete="off"
+                        >
 
 
-                <button
-                    id="sendChatButton"
-                    type="button"
-                >
-                    SEND
-                </button>
+                        <button
+                            id="sendMessageBtn"
+                            type="button"
+                        >
+                            Send 🚀
+                        </button>
 
-            </div>
-
-
-            <div class="chat-help">
-                Press Enter to send your message.
-            </div>
-
-        </section>
-
-
-    </main>
+                    </div>
 
 
 
-    <!-- =====================================================
-         ACCOUNT MODAL
-         ===================================================== -->
+                    <p class="safety-note">
 
-    <div
-        id="accountModal"
-        class="modal"
-    >
+                        💡 Remember to keep conversations nice,
+                        friendly and child-friendly!
 
-        <div class="modal-content">
+                    </p>
 
 
-            <button
-                id="closeAccountModal"
-                class="modal-close"
-                type="button"
-            >
-                ✕
-            </button>
+                </div>
 
 
-            <div class="account-avatar">
-                <span data-player-avatar>
-                    🙂
-                </span>
-            </div>
+            </section>
 
 
-            <h2>
-                YOUR ACCOUNT
-            </h2>
+        </main>
 
-
-            <div class="account-information">
-
-                <p>
-
-                    <strong>
-                        Name:
-                    </strong>
-
-                    <span data-player-name>
-                        Player
-                    </span>
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        UID:
-                    </strong>
-
-                    <span data-player-uid>
-                        -
-                    </span>
-
-                </p>
-
-
-                <p>
-
-                    <strong>
-                        PlayCoins:
-                    </strong>
-
-                    <span data-balance>
-                        0
-                    </span>
-
-                </p>
-
-            </div>
-
-
-            <div class="account-actions">
-
-                <button
-                    id="logoutButton"
-                    type="button"
-                >
-                    🚪 Logout
-                </button>
-
-
-                <button
-                    id="deleteAccountButton"
-                    type="button"
-                >
-                    🗑️ Delete Account
-                </button>
-
-            </div>
-
-
-        </div>
 
     </div>
 
 
-
-    <!-- =====================================================
-         FIREBASE + MAIN JAVASCRIPT
-         ===================================================== -->
-
+    <!-- Firebase-connected JavaScript -->
     <script
         type="module"
         src="script.js"
@@ -394,4 +198,4 @@
 </body>
 
 </html>
-```
+
