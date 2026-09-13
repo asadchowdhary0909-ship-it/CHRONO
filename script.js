@@ -2440,3 +2440,13 @@ document.addEventListener(
 
     }
 );
+
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "chrono-fa677.firebaseapp.com",
+    databaseURL: "https://chrono-fa677-default-rtdb.firebaseio.com/",
+    projectId: "chrono-fa677",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
